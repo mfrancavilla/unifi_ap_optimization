@@ -7,7 +7,9 @@ This repository contains a pair of standalone Bash scripts designed to audit Uni
 ## Prerequisites
 
 Both scripts require the following packages installed on your local control machine:
+
 **jq**: Used to safely read and extract data from the incoming JSON IP arrays.
+
 **sshpass**: Required by the key deployment tool to pass initial password authorizations to remote targets.
 
 To install dependencies on Debian/Ubuntu systems:
@@ -22,8 +24,10 @@ sudo apt-get update && sudo apt-get install jq sshpass -y
 This script streamlines the process of push-injecting a local computer\'s public SSH identity onto a collection of target Access Points. It replaces explicit manually targeted pathways with standard automated fallback configurations.
 
 ### Features
-**Automatic Identity Discovery**: Scans local standard configurations (\`id_ed25519.pub\`, \`id_rsa.pub\`, or \`id_ecdsa.pub\`) and selects the first available credential.
+**Automatic Identity Discovery**: Scans local standard configurations (`id_ed25519.pub`, `id_rsa.pub`, or `id_ecdsa.pub`) and selects the first available credential.
+
 **Idempotent Appending**: Analyzes pre-existing entries on targets to cleanly bypass redundant credential insertions.
+
 **Prompting Over Hardcoding**: Requests target environment SSH usernames dynamically at run-time if the environment variable is absent.
 
 ### Usage
@@ -41,7 +45,9 @@ This utility framework interrogates target Access Points to build a structured v
 
 ### Features
 **Cross-Platform Adaptation**: Dynamically identifies the system framework on-the-fly to execute matching data extractions for both Qualcomm/Upstream drivers (`mca-roam-info` / `iw`) and MediaTek platforms (`iwpriv` / `iwconfig`).
+
 **Dynamic Hostname Alignment**: Queries active device indicators directly via internal UniFi operational stacks (`mca-cli-op`), eliminating manual network mapping.
+
 **BSSID Neighbor Localization**: Forces cross-channel sweeps to build complex spatial relationship representations between peer endpoints.
 
 ### Usage
