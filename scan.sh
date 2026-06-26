@@ -1,23 +1,28 @@
 #!/bin/bash
 
 # ==============================================================================
-# CONFIGURATION VARIABLES
+# INPUT VALIDATION & CONFIGURATION
 # ==============================================================================
+if [ -z "$1" ] || ! command -v jq &>/dev/null; then
+    echo "Usage: $0 '<JSON_ARRAY_OF_IPS>'" >&2
+    echo "Example: $0 '[\"192.168.1.20\", \"192.168.1.21\"]'" >&2
+    echo "Note: This script requires 'jq' to be installed locally." >&2
+    exit 1
+fi
+
+# Parse the JSON string into a bash array using jq
+mapfile -t CANDIDATE_IPS < <(echo "$1" | jq -r '.[]')
+
+if [ ${#CANDIDATE_IPS[@]} -eq 0 ]; then
+    echo "[CRITICAL ERROR] No valid IP addresses found in the provided JSON array." >&2
+    exit 1
+fi
+
 # Prompt for SSH user if not already provided via environment
 if [ -z "$SSH_USER" ]; then
     read -r -p "Enter SSH Username [root]: " SSH_USER
     SSH_USER="${SSH_USER:-root}"
 fi
-
-CANDIDATE_IPS=(
-    "192.168.1.29"
-    "192.168.1.127"
-    "192.168.1.79"
-    "192.168.1.132"
-    "192.168.1.207"
-    "192.168.1.169"
-    "192.168.1.111"
-)
 
 # Create a temporary file to hold JSON output to allow matrix processing at the end
 JSON_OUT=$(mktemp)
@@ -37,12 +42,6 @@ VALID_AP_COUNT=0
 # ==============================================================================
 for AP_IP in "${CANDIDATE_IPS[@]}"; do
     CURRENT_COUNT=$((CURRENT_COUNT + 1))
-    
-    # Safely skip camera systems or specialized static endpoints
-    if [[ "$AP_IP" =~ ^(192.168.1.89|192.168.1.16|192.168.1.71|192.168.1.45|192.168.1.179)$ ]]; then
-        echo "  [*] Skipping known camera endpoint: $AP_IP" >&2
-        continue
-    fi
 
     echo "======================================================================" >&2
     echo " PROGRESS: [$CURRENT_COUNT/$TOTAL_TARGETS] Processing Node: $AP_IP" >&2
@@ -53,8 +52,13 @@ for AP_IP in "${CANDIDATE_IPS[@]}"; do
         continue
     fi
 
-    # Remote command to discover active RF Profiles and the primary identifying interface MAC address
+    # Remote command to discover hostname, active RF Profiles, and primary interface MAC
     REMOTE_CMD=$(cat << 'EOF'
+# Discover hostname dynamically across UniFi versions/models
+unifi_name=$(mca-cli-op info 2>/dev/null | awk -F': ' '/Hostname/ {print $2}')
+[ -z "$unifi_name" ] && unifi_name=$(hostname 2>/dev/null)
+[ -z "$unifi_name" ] && unifi_name="Unknown-AP"
+
 primary_mac=$(ip link show | awk '/ether/ {print $2; exit}' | tr '[:upper:]' '[:lower:]')
 [ -z "$primary_mac" ] && primary_mac=$(ifconfig 2>/dev/null | awk '/HWaddr/ {print $5; exit}' | tr '[:upper:]' '[:lower:]')
 
@@ -149,6 +153,7 @@ else
     ')
 fi
 
+echo "===NAME_START===$unifi_name===NAME_END==="
 echo "===MAC_START===$primary_mac===MAC_END==="
 echo "===RF_START==="
 echo "$rf_data"
@@ -247,7 +252,8 @@ EOF
     RAW_RESPONSE=$(ssh -o ConnectTimeout=4 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o BatchMode=yes "$SSH_USER@$AP_IP" "$REMOTE_CMD" 2>/dev/null)
     SIGNAL_BLOCKS=$(ssh -o ConnectTimeout=6 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o BatchMode=yes "$SSH_USER@$AP_IP" "$REMOTE_SCAN_CMD" 2>/dev/null)
 
-    # Parse primary mac address and RF profiles out of raw response
+    # Parse dynamically found fields out of raw response
+    TARGET_NAME=$(echo "$RAW_RESPONSE" | awk -F'===' '/===NAME_START===/ {print $3}')
     TARGET_MAC=$(echo "$RAW_RESPONSE" | awk -F'===' '/===MAC_START===/ {print $3}')
     PARSED_BLOCKS=$(echo "$RAW_RESPONSE" | sed -n '/===RF_START===/,/===RF_END===/p' | grep -v "===.*_START===" | grep -v "===.*_END===")
 
@@ -257,15 +263,8 @@ EOF
     fi
     VALID_AP_COUNT=$((VALID_AP_COUNT + 1))
 
-    # Hostname Map Normalization
-    HOSTNAME="AP-$AP_IP"
-    if [ "$AP_IP" = "192.168.1.29" ]; then HOSTNAME="PlayroomAP"; fi
-    if [ "$AP_IP" = "192.168.1.127" ]; then HOSTNAME="Hallway AP"; fi
-    if [ "$AP_IP" = "192.168.1.79" ]; then HOSTNAME="U7 Outdoor"; fi
-    if [ "$AP_IP" = "192.168.1.132" ]; then HOSTNAME="Guest room AP"; fi
-    if [ "$AP_IP" = "192.168.1.207" ]; then HOSTNAME="Master bedroom AP"; fi
-    if [ "$AP_IP" = "192.168.1.169" ]; then HOSTNAME="Attic AP"; fi
-    if [ "$AP_IP" = "192.168.1.111" ]; then HOSTNAME="Office AP"; fi
+    # Hostname Map Normalization (dynamic fallback if empty)
+    HOSTNAME="${TARGET_NAME:-AP-$AP_IP}"
 
     echo "    {" >&3
     echo "      \"hostname\": \"$HOSTNAME\"," >&3
