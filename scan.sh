@@ -319,6 +319,12 @@ BEGIN {
     clean_val = line_parts[2]
     gsub(/[^0-9\-]/, "", clean_val)
     rssi = clean_val + 0
+    
+    # Safety catch: Ensure the RSSI is properly registered as negative
+    if (rssi > 0) {
+        rssi = -rssi
+    }
+    
     if (current_host != "" && current_bssid != "") {
         matrix[current_host, current_bssid] = rssi
     }
