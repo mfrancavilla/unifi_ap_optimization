@@ -54,7 +54,7 @@ This utility framework interrogates target Access Points to build a structured v
 Execute the telemetry sweep by delivering your hardware catalog targets as a structural JSON text argument:
 
 ```bash
-./get_telemetry.sh \'[\"192.168.1.29\", \"192.168.1.127\", \"192.168.1.79\"]\'
+./get_telemetry.sh '["192.168.1.29", "192.168.1.127", "192.168.1.79"]'
 ```
 
 ### Execution Output Frameworks
@@ -64,26 +64,26 @@ The script builds a standard JSON data schema detailing spatial and functional s
 
 ```json
 {
-  \"scan_timestamp\": \"2026-06-25T21:23:44Z\",
-  \"access_points\": [
+  "scan_timestamp": "2026-06-25T21:23:44Z",
+  "access_points": [
     {
-      \"hostname\": \"Main-Hall-AP\",
-      \"ip_address\": \"192.168.1.29\",
-      \"mac_address\": \"e0:63:da:aa:bb:cc\",
-      \"rf_profiles\": [
+      "hostname": "Main-Hall-AP",
+      "ip_address": "192.168.1.29",
+      "mac_address": "e0:63:da:aa:bb:cc",
+      "rf_profiles": [
         {
-          \"interface\": \"rai0\",
-          \"channel\": 36,
-          \"frequency_mhz\": 5180,
-          \"width_mhz\": 80
+          "interface": "rai0",
+          "channel": 36,
+          "frequency_mhz": 5180,
+          "width_mhz": 80
         }
       ],
-      \"inter_ap_signals\": [
+      "inter_ap_signals": [
         {
-          \"bssid\": \"e0:63:da:dd:ee:ff\",
-          \"rssi_dbm\": -62,
-          \"channel\": 149,
-          \"ssid\": \"Secure_Corporate_WiFi\"
+          "bssid": "e0:63:da:dd:ee:ff",
+          "rssi_dbm": -62,
+          "channel": 149,
+          "ssid": "Secure_Corporate_WiFi"
         }
       ]
     }
@@ -95,7 +95,7 @@ The script builds a standard JSON data schema detailing spatial and functional s
 Simultaneously, a structured grid outputs directly onto standard error for instantaneous network visualization:
 
 ```text
-Observer \\ Target | Main-Hall-AP      | Office-AP         | Patio-U7          
+Observer \ Target | Main-Hall-AP      | Office-AP         | Patio-U7          
 ------------------ | ----------------- | ----------------- | -----------------
 Main-Hall-AP       |      [Self]       | -68 dBm           | -75 dBm           
 Office-AP          | -65 dBm           |      [Self]       |      (Unseen)     
@@ -109,6 +109,6 @@ Patio-U7           | -78 dBm           |      (Unseen)     |      [Self]
 You can suppress interactive user-prompts within automated system flows or continuous pipeline environments by pre-declaring standard environmental markers before calling execution steps:
 
 ```bash
-export SSH_USER=\"admin_operator\"
-./get_telemetry.sh \'[\"192.168.1.5\"]\'
+export SSH_USER="admin_operator"
+./get_telemetry.sh \'["192.168.1.5"]\'
 ```
