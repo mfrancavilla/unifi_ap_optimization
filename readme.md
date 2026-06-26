@@ -95,7 +95,7 @@ The script builds a standard JSON data schema detailing spatial and functional s
 Simultaneously, a structured grid outputs directly onto standard error for instantaneous network visualization:
 
 ```text
-Observer \ Target | Main-Hall-AP      | Office-AP         | Patio-U7          
+Observer \  Target | Main-Hall-AP      | Office-AP         | Patio-U7          
 ------------------ | ----------------- | ----------------- | -----------------
 Main-Hall-AP       |      [Self]       | -68 dBm           | -75 dBm           
 Office-AP          | -65 dBm           |      [Self]       |      (Unseen)     
@@ -110,5 +110,5 @@ You can suppress interactive user-prompts within automated system flows or conti
 
 ```bash
 export SSH_USER="admin_operator"
-./get_telemetry.sh \'["192.168.1.5"]\'
+./get_telemetry.sh '["192.168.1.5"]'
 ```
